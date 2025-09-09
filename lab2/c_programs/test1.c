@@ -1,10 +1,9 @@
 #include <stdio.h>
 
 int main() {
-    int a, b, c, d;
-    a = getchar(); 
-    b = -5;
-    c = (a != b);
-    d = b / c;
+    int a = getchar(); 
+    int b = -5;
+    int c = (a != b);
+    int d = b / c;
   return 0;
 }
