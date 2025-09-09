@@ -27,22 +27,22 @@ and F-Measure scores for each analyzer on this suite of programs.
 =========================================================================================================
 | Program   | Ground Truth  |     AFL      | IKOS Interval |   IKOS DBM   |  Gemini (O)  |  Gemini (U)  |
 |=======================================================================================================|
-| test0.c   |               |              |               |              |              |              |
-| test1.c   |               |              |               |              |              |              |
-| test2.c   |               |              |               |              |              |              |
-| test3.c   |               |              |               |              |              |              |
-| test4.c   |               |              |               |              |              |              |
-| test5.c   |               |              |               |              |              |              |
-| test6.c   |               |              |               |              |              |              |
-| test7.c   |               |              |               |              |              |              |
-| test8.c   |               |              |               |              |              |              |
-| test9.c   |               |              |               |              |              |              |
-| test10.c  |     wrong     |              |               |              |              |              |
-| test11.c  |     right     |              |               |              |              |              |
+| test0.c   |     right     |    accept    |    accept     |    accept    |    accept    |    accept    |
+| test1.c   |     wrong     |    reject    |    reject     |    reject    |    reject    |    reject    |
+| test2.c   |     wrong     |    reject    |    reject     |    reject    |    reject    |    reject    |
+| test3.c   |     right     |    accept    |    reject     |    reject    |    accept    |    accept    |
+| test4.c   |     right     |    accept    |    reject     |    accept    |    accept    |    accept    |
+| test5.c   |     right     |    accept    |    reject     |    reject    |    reject    |    reject     |
+| test6.c   |     wrong     |    reject    |    reject     |    reject    |    reject    |    reject    |
+| test7.c   |     wrong     |    reject    |    reject     |    reject    |    reject    |    reject    |
+| test8.c   |     right     |    accept    |    reject     |    reject    |    reject    |    accept    |
+| test9.c   |     wrong     |    reject    |    reject     |    reject    |    reject    |    reject    |
+| test10.c  |     wrong     |    reject    |    reject     |    reject    |    reject    |    reject    |
+| test11.c  |     right     |    accept    |    reject     |    reject    |    reject    |    accept    |
 |=======================================================================================================|
-| Precision |     ---       |     ---      |     ---       |     ---      |     ---      |     ---      |
-| Recall    |     ---       |     ---      |     ---       |     ---      |     ---      |     ---      |
-| F-measure |     ---       |     ---      |     ---       |     ---      |     ---      |     ---      |
+| Precision |     1.000     |    1.000     |    0.545      |    0.600     |    0.750     |    0.857     |
+| Recall    |     1.000     |    1.000     |    1.000      |    1.000     |    1.000     |    1.000     |
+| F-measure |     1.000     |    1.000     |    0.706      |    0.750     |    0.857     |    0.923     |
 =========================================================================================================
 
 Part B: Answer the below questions. Provide short
@@ -50,17 +50,26 @@ explanations to justify your answers.
 
 Question 1: From the given programs, can AFL be a sound analysis? Can it be complete?
 Answer:
-
+Yes, AFL can be sound since it achieved perfect recall (1.000) with FNR = 0 so it 
+detected all buggy programs without missing any divide-by-zero errors. Also it can be
+complete since it achieved perfect precision (1.000) with FPR = 0, never falsely flagged
+any correct programs as containing divide-by-zero errors. Theoretically strange cause analyzers
+cant be both sound and complete but hey, for these given programs it was.
 
 
 Question 2: From the given programs, can IKOS interval be a sound analysis? Can it be complete?
 Answer:
-
+IKOS Interval can be sound since it achieved perfect recall (1.000) with FNR = 0, thus 
+detecting all actual divide-by-zero errors without missing any. But it is not complete,
+IKOS Interval has trash precision (0.545) with FPR = 0.455. It incorrectly flagged 5
+out of 6 correct programs (test3, test4, test5, test8, test11) as buggy.
 
 
 Question 3: From the given programs, can IKOS DBM be a sound analysis? Can it be complete?
 Answer:
-
+Yeah IKOS DBM can be sound it achieved perfect recall (1.000) with FNR = 0, successfully detecting
+all actual divide-by-zero errors. But not complete with precision (0.600) with FPR = 0.400.
+Incorrectly flagged 4 out of 6 correct programs (test3, test5, test8, test11) as buggy.
 
 
 Question 4: What are the pros and cons of using the Interval versus DBM
@@ -68,16 +77,30 @@ domains in IKOS to find divide-by-zero errors?  Comment
 on both the accuracy and cost of the analyzer under these two domains.
 
 Answer:
-
+Interval has simpler implemetation and thus faster analysis and lower cost relatively. But
+very imprecise with high false positive rate. DBM is more precise than Interval (60.0% vs 54.5% precision)
+and thus more accurately captures relationships between variables. But also more complex implementation
+with higher computational cost with matrix operations.
 
 
 Question 5: From the given programs, can using Gemini be a sound analysis? Can it be complete?
 Answer:
-
+For some reason Gemini in this specific instance can be a sound analysis with both Gemini (O) and
+Gemini (U) having perfect recall (1.000) with FNR = 0, detecting all divide-by-zero errors. Honestly
+I am bamboozled, I was expecting it to not be sound at all. But expectedly, Gemini was not complete,
+with Gemini (O) as 75.0% precision, incorrectly flagged test5 and test8, and Gemini (U) as 85.7% 
+precision, incorrectly flagged only test5. Still this is insane. I was expecting both unsound and
+incomplete given that it is a statistical machine.
 
 
 Question 6: What was the difference between our two prompts for Gemini?
 Comment on what the prompt encouraged and how it affected the output.
 Answer:
 
+In the overapprox prompt we had "Prefer false positives over false negatives". So we encourage 
+conservative analysis and report an error on the safe side, which gets a higher false positive 
+rate of 25%. But that means that no bugs are missed at the cost of more false alarms
 
+In the underapprox prompt we had "Prefer false negatives over false positives". So we encourage
+a more liberal analysis and report an error when confident. This of course gives lower false positive
+of rate 14.3% FPR and reduces false alarms but increases risk of missing real bugs.
