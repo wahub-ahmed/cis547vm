@@ -63,10 +63,10 @@ PreservedAnalyses DynamicAnalysisPass::run(Module &M, ModuleAnalysisManager &AM)
 
       instrumentCoverage(&M, *Inst, Line, Col);
 
-      /**
-       * TODO: Add code to check if the instruction is a BinaryOperator and if so,
-       * instrument the instruction as specified in the Lab document.
-       */
+      // Instrument binary operators
+      if (auto *BinOp = dyn_cast<BinaryOperator>(Inst)) {
+        instrumentBinOpOperands(&M, BinOp, Line, Col);
+      }
     }
   }
 
@@ -91,11 +91,22 @@ void instrumentBinOpOperands(Module *M, BinaryOperator *BinOp, int Line, int Col
   auto *Int32Type = Type::getInt32Ty(Context);
   auto *CharType = Type::getInt8Ty(Context);
 
-  /**
-   * TODO: Add code to instrument the BinaryOperator to print
-   * its location, operation type and the runtime values of its
-   * operands.
-   */
+  // Get operator symbol
+  char symbol = getBinOpSymbol(BinOp->getOpcode());
+  auto SymbolVal = ConstantInt::get(CharType, symbol);
+
+  // Line and column constants
+  auto LineVal = ConstantInt::get(Int32Type, Line);
+  auto ColVal = ConstantInt::get(Int32Type, Col);
+
+  // Operands
+  Value *Op1 = BinOp->getOperand(0);
+  Value *Op2 = BinOp->getOperand(1);
+
+  std::vector<Value *> Args = {SymbolVal, LineVal, ColVal, Op1, Op2};
+
+  auto *BinOpFunc = M->getFunction(BINOP_OPERANDS_FUNCTION_NAME);
+  CallInst::Create(BinOpFunc, Args, "", BinOp);
 }
 
 // Pass registration for the new pass manager

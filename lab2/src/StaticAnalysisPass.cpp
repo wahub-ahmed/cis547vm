@@ -31,11 +31,15 @@ PreservedAnalyses StaticAnalysisPass::run(Module &M, ModuleAnalysisManager &AM) 
       int Col = DebugLoc.getCol();
       outs() << Line << ", " << Col << "\n";
 
-      /**
-       * TODO: Add code to check if the instruction is a BinaryOperator and if
-       * so, print the information about its location and operands as specified
-       * in the Lab document.
-       */
+      if (auto *BinOp = dyn_cast<BinaryOperator>(&Inst)) {
+        char symbol = getBinOpSymbol(BinOp->getOpcode());
+        std::string opName = getBinOpName(symbol);
+        std::string op1 = variable(BinOp->getOperand(0));
+        std::string op2 = variable(BinOp->getOperand(1));
+        outs() << opName << " on Line " << Line << ", Column " << Col
+               << " with first operand " << op1
+               << " and second operand " << op2 << "\n";
+      }
     }
   }
   return PreservedAnalyses::all();
